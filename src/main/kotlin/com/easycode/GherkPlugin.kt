@@ -53,7 +53,7 @@ open class GenerationTask : DefaultTask() {
     var featureDirectory: File = File(project.projectDir, "src/androidTest/assets")
 
     @Input
-    var mobileExternalStorageReportFolder: String = "gherk-report/"
+    var reportFolder: String = "gherk-report/"
 
     @TaskAction
     fun createGherkClasses() {
@@ -63,11 +63,11 @@ open class GenerationTask : DefaultTask() {
         val gherkExtension = project.extensions.getByName("gherk") as GherkExtension
         outputDirectory = gherkExtension.outputDirectory
         featureDirectory = gherkExtension.featureDirectory
-        mobileExternalStorageReportFolder = gherkExtension.mobileExternalStorageReportFolder
+        reportFolder = gherkExtension.reportFolderName
         if (featureDirectory.exists()) {
             cleanRecursively(outputDirectory)
             generateRecursive(featureDirectory, outputDirectory, logger)
-            generateReportClasses(outputDirectory, mobileExternalStorageReportFolder, logger)
+            generateReportClasses(outputDirectory, reportFolder, logger)
         }
     }
 
@@ -83,6 +83,6 @@ class GherkExtension(project: Project) {
 
     val outputDirectory: File = File(project.buildDir, "generated/gherk/src/")
     val featureDirectory: File = File(project.projectDir, "src/androidTest/assets")
-    val mobileExternalStorageReportFolder: String = "gherk-report/"
+    val reportFolderName: String = "gherk-report/"
 
 }

@@ -41,7 +41,7 @@ private fun generateFeatureReportProperty(document: GherkinDocument): PropertySp
 private fun generateReportFunction(documents: List<GherkinDocument>): FunSpec {
     val builder = FunSpec.builder("report")
     builder.returns(listTypeName(ClassName("com.easycode", "FeatureReport")))
-    builder.addCode("val list = %T()\n", arrayList("FeatureReport"))
+    builder.addCode("val list = %T()\n", arrayList(ClassName("com.easycode", "FeatureReport")))
     documents.map { it.feature }.forEach {
         builder.addCode("list.add(${it.name.asProperty()})\n")
     }

@@ -18,37 +18,40 @@ data class SceneStep(val text: String, val params: List<String>)
 
 data class SceneExample(val map: Map<String, String>)
 
-internal fun Scene.generateBackground(folder: File, logger: Logger) {
+internal fun Scene.generateBackground(folder: File, pack: String, logger: Logger) {
     logger.log(LogLevel.DEBUG, "[GHERK] *** Scenario Background -> ${name.asFileName()}")
-    val file = FileSpec.builder("com.easycode", name.asFileName())
+    val file = FileSpec.builder(pack, name.asFileName())
+            .addStaticImport("com.easycode", "*")
             .addType(generateScenarioType(name.asCamelcaseClassName(), generateBundleType(steps, generateExecuteFunction(steps))))
             .addFunction(generateBackgroundFunction(name))
-            .addFunctions(steps.map{ dslFunction(gherkClassName(name.asCamelcaseClassName()), it)})
+            .addFunctions(steps.map { dslFunction(ClassName("", name.asCamelcaseClassName()), it) })
             .build()
     folder.mkdirs()
     file.writeTo(folder)
 }
 
 
-internal fun Scene.generateScenario(folder: File, background: Scene?, logger: Logger) {
+internal fun Scene.generateScenario(folder: File, background: Scene?, pack: String, logger: Logger) {
     logger.log(LogLevel.DEBUG, "[GHERK] *** Scenario -> ${name.asFileName()}")
-    val file = FileSpec.builder("com.easycode", name.asFileName())
+    val file = FileSpec.builder(pack, name.asFileName())
+            .addStaticImport("com.easycode", "*")
             .addType(generateScenarioType(name.asClassName(), generateBundleType(steps, generateExecuteFunction(steps))))
             .addFunction(generateScenarioTestFunction(this, background))
-            .addFunctions(steps.map{ dslFunction(gherkClassName(name.asClassName()), it)})
+            .addFunctions(steps.map { dslFunction(ClassName("", name.asClassName()), it) })
 
             .build()
     folder.mkdirs()
     file.writeTo(folder)
 }
 
-internal fun Scene.generateOutlineScenario(folder: File, background: Scene?, logger: Logger) {
+internal fun Scene.generateOutlineScenario(folder: File, background: Scene?, pack: String, logger: Logger) {
     logger.log(LogLevel.DEBUG, "[GHERK] *** Scenario Outline -> ${name.asFileName()} $examples")
-    val file = FileSpec.builder("com.easycode", name.asFileName())
+    val file = FileSpec.builder(pack, name.asFileName())
+            .addStaticImport("com.easycode", "*")
             .addType(generateScenarioType(name.asClassName(), generateBundleType(steps, generateExecuteOutlineFunction(steps))))
             .addFunction(generateScenarioOutlineTestFunction(this, background))
-            .addFunction(generateExamplesFunction(examples))
-            .addFunctions(steps.map{ dslFunction(gherkClassName(name.asClassName()), it)})
+            .addFunction(generateExamplesFunction(name.asClassName(), examples))
+            .addFunctions(steps.map { dslFunction(ClassName("", name.asClassName()), it) })
             .build()
     folder.mkdirs()
     file.writeTo(folder)
@@ -57,7 +60,7 @@ internal fun Scene.generateOutlineScenario(folder: File, background: Scene?, log
 private fun generateScenarioType(scenarioName: String, bundleType: TypeSpec): TypeSpec {
     return TypeSpec.classBuilder(scenarioName)
             .addType(bundleType)
-            .addProperty(PropertySpec.builder("bundle", ClassName("com.easycode.$scenarioName", "Bundle"))
+            .addProperty(PropertySpec.builder("bundle", ClassName("", "Bundle"))
                     .initializer("Bundle()")
                     .build())
             .build()
@@ -107,7 +110,7 @@ private fun dslFunction(scenario: TypeName, step: SceneStep): FunSpec {
 }
 
 private fun generateBackgroundFunction(backgroundName: String): FunSpec {
-    val backgroundClassName = ClassName("com.easycode", backgroundName.asCamelcaseClassName())
+    val backgroundClassName = ClassName("", backgroundName.asCamelcaseClassName())
     val builder = FunSpec.builder(backgroundName.asCamelcaseMethod())
     builder.addParameter("dsl", LambdaTypeName.get(receiver = backgroundClassName, returnType = Unit::class.asTypeName()))
     builder.returns(backgroundClassName)
@@ -118,11 +121,10 @@ private fun generateBackgroundFunction(backgroundName: String): FunSpec {
 }
 
 private fun generateScenarioTestFunction(scene: Scene, background: Scene?): FunSpec {
-    val scenarioClassName = ClassName("com.easycode", scene.name.asClassName())
-
+    val scenarioClassName = ClassName("", scene.name.asClassName())
     val builder = FunSpec.builder("test_${scene.name.asClassName()}")
     background?.let {
-        builder.addParameter("background", gherkClassName(background.name.asCamelcaseClassName()))
+        builder.addParameter("background", backgroundTypeName(background))
     }
     builder.addParameter("dsl", LambdaTypeName.get(receiver = scenarioClassName, returnType = Unit::class.asTypeName()))
     builder.addCode("try {\n")
@@ -142,12 +144,17 @@ private fun generateScenarioTestFunction(scene: Scene, background: Scene?): FunS
     return builder.build()
 }
 
+private fun backgroundTypeName(background: Scene): TypeName {
+    val bgClassName = background.name.asCamelcaseClassName()
+    return ClassName("", bgClassName)
+}
+
 private fun generateScenarioOutlineTestFunction(scene: Scene, background: Scene?): FunSpec {
-    val scenarioClassName = ClassName("com.easycode", scene.name.asClassName())
+    val scenarioClassName = ClassName("", scene.name.asClassName())
 
     val builder = FunSpec.builder("test_${scene.name.asClassName()}")
     background?.let {
-        builder.addParameter("background", gherkClassName(background.name.asCamelcaseClassName()))
+        builder.addParameter("background", backgroundTypeName(background))
     }
     builder.addParameter("dsl", LambdaTypeName.get(receiver = scenarioClassName, returnType = Unit::class.asTypeName()))
     builder.addCode("try {\n")
@@ -156,7 +163,7 @@ private fun generateScenarioOutlineTestFunction(scene: Scene, background: Scene?
         builder.addCode("    background.bundle.execute()\n")
     }
     builder.addCode("    scenario.dsl()\n")
-    builder.addCode("    examples().forEach{ scenario.bundle.execute(it) }\n")
+    builder.addCode("    examples_${scene.name.asClassName()}().forEach{ scenario.bundle.execute(it) }\n")
     builder.addCode("    report.${scene.featName.asProperty()}.scenarioReports.add(ScenarioReport(\"${scene.name}\", ScenarioTestStatus.PASSED))\n")
     builder.addCode("} catch(throwable : Throwable){\n")
     builder.addCode("    report.${scene.featName.asProperty()}.scenarioReports.add(ScenarioReport(\"${scene.name}\", ScenarioTestStatus.ERROR, throwable))\n")
@@ -168,10 +175,10 @@ private fun generateScenarioOutlineTestFunction(scene: Scene, background: Scene?
 }
 
 
-private fun generateExamplesFunction(examples: List<SceneExample>): FunSpec {
+private fun generateExamplesFunction(name: String, examples: List<SceneExample>): FunSpec {
     val hashTypeName = ParameterizedTypeName.get(LinkedHashMap::class, String::class, String::class)
     val listTypeName = ParameterizedTypeName.get(ArrayList::class.asTypeName(), hashTypeName)
-    val builder = FunSpec.builder("examples")
+    val builder = FunSpec.builder("examples_$name")
     builder.returns(listTypeName)
     builder.addCode("val list = %T()\n", listTypeName)
     examples.forEachIndexed { index, it ->

@@ -1,10 +1,7 @@
 package com.easycode.generation.specs
 
 import com.easycode.generation.support.list
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.*
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logger
 import java.io.File
@@ -54,6 +51,6 @@ private fun transformedReportFunction(logger: Logger): FunSpec {
     return FunSpec.builder("transformedReport")
             .addCode("val reportList = report.report()\n")
             .addCode("return transformToCucumberReport(reportList)\n")
-            .returns(list("CucumberFeatureReport"))
+            .returns(list(ClassName("com.easycode", "cucumberFeatureReport")))
             .build()
 }

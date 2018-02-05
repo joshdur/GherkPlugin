@@ -1,6 +1,7 @@
 package com.easycode.generation
 
 import com.easycode.generation.specs.*
+import com.easycode.generation.support.asCamelcaseClassName
 import com.easycode.generation.support.buildScene
 import com.easycode.generation.support.parseFromUri
 import gherkin.ast.GherkinDocument
@@ -39,11 +40,13 @@ private fun generateClasses(outputDirectory: File, documents: List<GherkinDocume
     logger.log(LogLevel.DEBUG, "[GHERK] * Generate Scenarios")
 
     documents.forEach { document ->
+        val feature = document.feature.name.asCamelcaseClassName().toLowerCase()
+        val pack = "com.easycode.$feature"
         val scenes = document.feature.children.map { buildScene(document.feature, it) }
         val background = scenes.firstOrNull { it.type == ScenarioType.BACKGROUND }
-        background?.generateBackground(outputDirectory, logger)
-        scenes.filter { it.type == ScenarioType.OUTLINE }.forEach { it.generateOutlineScenario(outputDirectory, background, logger) }
-        scenes.filter { it.type == ScenarioType.SCENARIO }.forEach { it.generateScenario(outputDirectory, background, logger) }
+        background?.generateBackground(outputDirectory, pack , logger)
+        scenes.filter { it.type == ScenarioType.OUTLINE }.forEach { it.generateOutlineScenario(outputDirectory, background, pack, logger) }
+        scenes.filter { it.type == ScenarioType.SCENARIO }.forEach { it.generateScenario(outputDirectory, background, pack, logger) }
 
     }
 }

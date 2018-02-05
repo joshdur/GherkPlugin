@@ -74,19 +74,19 @@ internal fun listTypeName(typeName: TypeName): TypeName {
     return ParameterizedTypeName.get(MutableList::class.asClassName(), typeName)
 }
 
-internal fun gherkClassName(name: String) = ClassName("com.easycode", name)
+internal fun arrayList(name: ClassName) = ParameterizedTypeName.get(ArrayList::class.asTypeName(), name)
 
-internal fun arrayList(name: String) = ParameterizedTypeName.get(ArrayList::class.asTypeName(), gherkClassName(name))
-
-
-internal fun list(name: String) = ParameterizedTypeName.get(List::class.asTypeName(), gherkClassName(name))
+internal fun list(name: ClassName) = ParameterizedTypeName.get(List::class.asTypeName(), name)
 
 internal fun readFromResorces(fileName: String): String {
     return getResource(fileName, fileName::class.java)?.readText() ?: throw GradleException("Couldn't find $fileName")
 }
 
 internal fun String.writeAsCodeFile(pack: String, name: String, outputFolder: File) {
-    val file = File(outputFolder, name)
+    val path = pack.replace(".", "/")
+    val folder = File(outputFolder, "$path/")
+    folder.mkdirs()
+    val file = File(folder, name)
     file.writeText(this.replace("{OUTPUT_PACKAGE}", pack))
 }
 
