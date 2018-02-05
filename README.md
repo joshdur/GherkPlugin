@@ -153,7 +153,7 @@ Given this outline feature
     
  ## Version
  
- Current version is 0.6.8
+ Current version is 0.7.4
  
 
  ## License
