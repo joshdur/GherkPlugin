@@ -1,0 +1,78 @@
+
+buildscript {
+    ext.kotlin_version = '1.2.20'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.1.2'
+    id 'com.gradle.plugin-publish' version '0.9.7'
+    id 'java-gradle-plugin'
+}
+
+apply plugin: 'kotlin'
+
+
+repositories {
+    mavenCentral()
+}
+
+task createClasspathManifest {
+    def outputDir = file("$buildDir/$name")
+
+    inputs.files sourceSets.main.runtimeClasspath
+    outputs.dir outputDir
+
+    doLast {
+        outputDir.mkdirs()
+        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
+    }
+}
+
+dependencies {
+    testRuntime files(createClasspathManifest)
+    compileOnly gradleApi()
+    compile ('io.cucumber:gherkin:5.0.0')
+    compile 'com.squareup:kotlinpoet:0.6.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.20"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.20"
+    compile "org.jetbrains.kotlin:kotlin-reflect:1.2.20"
+    compile 'com.android.tools.build:gradle:1.5.0'
+}
+
+
+
+group = 'com.easycode'
+version = '0.6.8'
+
+pluginBundle {
+    website = 'http://gherk.com'
+    vcsUrl = 'https://dl.bintray.com/jddjose/joshdur'
+    description = 'Gherk plugin to generate test code'
+    tags = ['gherkins', 'test']
+
+    plugins {
+        gherk {
+            id = 'com.easycode.gherk'
+            displayName = 'gherk'
+            description = 'Gherk plugin to generate test code'
+        }
+
+    }
+}
+
+
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+
