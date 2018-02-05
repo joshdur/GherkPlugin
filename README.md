@@ -14,7 +14,7 @@ In order to start using the plugin you need to add this to your buildscript.
           }
     }
     dependencies {
-        classpath "gradle.plugin.com.easycode:gherk:0.6.8"
+        classpath "gradle.plugin.com.easycode:gherk:0.7.4"
     }
     
  Apply the plugin in your project build.gradle.
@@ -28,7 +28,7 @@ In order to start using the plugin you need to add this to your buildscript.
     gherk {
         outputDirectory = File(%OUTPUT_FOLDER%) // default = $buildDir/generated/gherk/src/
         featureDirectory = File(%INPUT_FOLDER%) // default = $projectDir/src/androidTest/assets/
-        reportFolderName = %FOLDER_NAME // default = gherk-report/
+        reportFolderName = %FOLDER_NAME // default = /data/%com.test.app%/cache/gherk-report/
     }
  
  * outputDirectory represents the folder where support kotlin files will be generated.
