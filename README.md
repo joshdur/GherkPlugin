@@ -155,9 +155,12 @@ Given this outline feature
  
  Current version is 0.7.4
  
+ ## Author
+
+ [JoshDur](https://github.com/joshdur) [jddjose@gmail.com](mailto:jddjose@gmail.com)
 
  ## License
  
-    This project is licensed under the Apache 2.0 License 
+ This project is licensed under the Apache 2.0 License. See [License](docs/LICENSE.md) for details
 
  
